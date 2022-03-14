@@ -1,16 +1,78 @@
 import sys
-
+import pandas as pd
+from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
-    pass
+    '''
+    Loads and merges the CSVs of Messages and Categories.
+    
+    Input:
+    messages_filepath (str): Path to massages.csv
+    categories_filepath (str): Path to categories.csv
+
+    Output:
+    pandas.Dataframe: merged Messages and Categories 
+    '''
+    # load datasets
+    messages = pd.read_csv(messages_filepath)
+    categories = pd.read_csv(categories_filepath)
+    # merge loaded datasets
+    df = pd.merge(messages, categories, on='id', how='left')
+    return df
+    
 
 
 def clean_data(df):
-    pass
+    '''
+    Converts categories into dummy coded variables and removes duplicates.
+    
+    Input:
+    df (pandas.DataFrame): Dataframe with Messeges and Categories
+
+    Output:
+    df (pandas.DataFrame): cleaned Dataframe   
+    '''
+    # create a dataframe of the 36 individual category columns
+    categories = df['categories'].str.split(pat=';',expand=True)
+    # select the first row of the categories dataframe
+    row = categories.iloc[0]
+    # extrect list of new coulumn names for categories
+    category_colnames = [col[:-2] for col in row]
+    # rename the columns of `categories`
+    categories.columns = category_colnames
+
+    # converting values and types
+    for column in categories:
+        # set each value to be the last character of the string
+        categories[column] = categories[column].str[-1] 
+        # convert column from string to numeric
+        categories[column] = categories[column].astype('int')
+
+    # drop the original categories column from `df`
+    df.drop(columns='categories', inplace =True)
+
+    # concatenate the original dataframe with the new `categories` dataframe
+    df = pd.concat([df,categories],axis=1)
+    # drop duplicates
+    df = df[~df.duplicated()]
+
+    return df
+
+
 
 
 def save_data(df, database_filename):
-    pass  
+    '''
+    Save Dataframe as SQL Database.
+
+    Input:
+    df (pandas.DataFrame) : Dataframe to be safed
+    database_filename (str) : filename of the SQL Database (with file extension .db)
+    '''
+
+    engine = create_engine(f'sqlite:///{database_filename}')
+    df.to_sql(database_filename, engine, index=False)
+
 
 
 def main():
