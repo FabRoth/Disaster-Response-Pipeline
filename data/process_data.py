@@ -4,19 +4,18 @@ from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
     '''
-    Loads and merges the CSVs of Messages and Categories.
+    Load and merge Messages and Categories.
     
-    Input:
-    messages_filepath (str): Path to massages.csv
-    categories_filepath (str): Path to categories.csv
+    Args:
+    messages_filepath (str): Path of massages.csv
+    categories_filepath (str): Path of categories.csv
 
-    Output:
-    pandas.Dataframe: merged Messages and Categories 
+    Returns:
+    df (DataFrame): merged Messages and Categories 
     '''
-    # load datasets
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
-    # merge loaded datasets
+    
     df = pd.merge(messages, categories, on='id', how='left')
     return df
     
@@ -24,21 +23,21 @@ def load_data(messages_filepath, categories_filepath):
 
 def clean_data(df):
     '''
-    Converts categories into dummy coded variables and removes duplicates.
+    Convert categories into dummy coded variables and removes duplicates.
+    The original column gets dropped.
     
-    Input:
-    df (pandas.DataFrame): Dataframe with Messeges and Categories
+    Args:
+    df (DataFrame): Dataframe with messeges and categories
 
-    Output:
-    df (pandas.DataFrame): cleaned Dataframe   
+    Returns:
+    df (DataFrame): cleaned Dataframe   
     '''
-    # create a dataframe of the 36 individual category columns
+    
     categories = df['categories'].str.split(pat=';',expand=True)
-    # select the first row of the categories dataframe
+    
     row = categories.iloc[0]
-    # extrect list of new coulumn names for categories
     category_colnames = [col[:-2] for col in row]
-    # rename the columns of `categories`
+    
     categories.columns = category_colnames
 
     # converting values and types
@@ -63,10 +62,11 @@ def clean_data(df):
 
 def save_data(df, database_filename):
     '''
-    Save Dataframe as SQL Database.
+    Save Dataframe as SQL Database in a Table called MessagesAndCategories. 
+    If the table exists it'll be replaced with the new data.
 
-    Input:
-    df (pandas.DataFrame) : Dataframe to be safed
+    Args:
+    df (DataFrame) : Dataframe to be safed
     database_filename (str) : filename of the SQL Database (with file extension .db)
     '''
 
