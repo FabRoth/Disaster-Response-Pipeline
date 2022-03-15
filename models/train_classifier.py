@@ -10,25 +10,25 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 nltk.download(['punkt', 'wordnet'])
 
-
 from sklearn.pipeline import Pipeline
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.ensemble import RandomForestClassifier
-
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import GridSearchCV
-
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report, accuracy_score
 
 
 def load_data(database_filepath):
     '''
-    Laodding data
+    Laoding data from SQL database and splits it into Datasets of predictor and criterion and a list of the categorie names.
     
-    Input:
+    Args:
+    database_filepath (str): database filepath
     
-    Output:
+    Returns: 
+    X (DataFrame):
+    Y (DataFrame):
+    category_names (list of str): 
     
     '''
     engine = create_engine('sqlite:///' + database_filepath)
@@ -39,13 +39,15 @@ def load_data(database_filepath):
 
     return X,Y, category_names
 
-def tokenize(text):
-    '''Tokenize
+def tokenize(text, url_place_holder_string='url_place_holder_string'):
+    '''Tokenize text and replacing all urls.
     
-    Input:
+    Args:
+    text (str): Text that should be tokenized
+    url_place_holder_string (str, default:'url_place_holder_string'): The string all URLs are changed to. 
     
-    Output:
-    
+    Retruns:
+    clean_tokens (list of str): List of tokens of the given text.
     '''
     # Replace all urls with a urlplaceholder string
     url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
@@ -55,7 +57,7 @@ def tokenize(text):
     
     # Replace url with a url placeholder string
     for detected_url in detected_urls:
-        text = text.replace(detected_url, 'url_place_holder_string')
+        text = text.replace(detected_url, url_place_holder_string)
 
     # Extract the word tokens from the provided text
     tokens = nltk.word_tokenize(text)
@@ -69,7 +71,16 @@ def tokenize(text):
     return clean_tokens
 
 def build_model():
-    '''TODO'''
+    '''
+    Build a GridSearch Model with a defined pipeline and parameters. 
+    The Pipeline is compiled by a CountVectorizer using tokenize, TFidfTransformer and a MultiOutputClassifier with RandomForrestClassifier as Estimator.
+
+    Args:
+    None
+
+    Returns:
+    cv (sklear GridSearchCV): created gridsearch object
+    '''
 
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer = tokenize)),
@@ -87,7 +98,16 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    '''TODO'''
+    '''
+    Evaluate a model with multiclass-multioutput with classification reports and accurancies of each categorie.
+    Results are printed in the console.
+
+    Args:
+    model (sklearn GridSearch, MultiPutputClassfier, Pipeline): The Multiclass-multioutput Model which is tested
+    X_test (DataFrame): A pandas DataFrame with the test data
+    Y_test (DataFrame): A pandas DataFrame with the test results to check the model against. 
+    category_names (list of str): List of the category names of the categories which should be evaluated. 
+    '''
 
     Y_prediction_test = model.predict(X_test)
 
@@ -98,7 +118,13 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
-    '''TODO'''
+    '''
+    Saving model.
+
+    Args: 
+    model (sklearn GridSearch, MultiPutputClassfier, Pipeline): Model to be safed.
+    model_filepath (str): Path and file name with file extension where and how the model is safed (pickle files are recommended)  
+    '''
     joblib.dump(model, model_filepath)
 
 
