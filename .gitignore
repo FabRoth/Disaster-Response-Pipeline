@@ -77,9 +77,13 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+
 # IPython
 profile_default/
 ipython_config.py
+/models/ML Pipeline Preparation.ipynb
+/models/Visu Prep.ipynb
+
 
 # pyenv
 .python-version
@@ -127,3 +131,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# sklear models
+/models/classifier.pkl
+/models/classifier_old.pkl
